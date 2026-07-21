@@ -33,20 +33,52 @@ class WebGLErrorBoundary extends Component<
   }
 }
 
-/** Elegant CSS-only stand-in shown when WebGL is unavailable. */
+/**
+ * Accurate Reuleaux triangle fallback (shown when WebGL is unavailable).
+ * A Reuleaux triangle is a curve of constant width: an equilateral triangle
+ * whose sides are replaced by circular arcs, each centred on the opposite
+ * vertex with radius equal to the side length. Drawn here with three SVG arcs.
+ */
 function StaticFallback() {
+  // Equilateral triangle centred at (100,100), circumradius 70.
+  // Vertices: A top, B bottom-left, C bottom-right. Arc radius = side length.
+  const path =
+    'M 100 30 ' +
+    'A 121.24 121.24 0 0 0 39.4 135 ' +
+    'A 121.24 121.24 0 0 0 160.6 135 ' +
+    'A 121.24 121.24 0 0 0 100 30 Z'
+
   return (
     <div className="flex h-full w-full items-center justify-center p-8">
-      <div className="relative aspect-square w-full max-w-sm">
-        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,oklch(0.6_0.16_235)_0%,oklch(0.3_0.1_262)_55%,transparent_75%)] blur-md animate-float" />
-        <div
-          className="absolute inset-[12%] border border-primary/40 bg-gradient-to-br from-primary/30 to-navy-800/60 shadow-2xl shadow-primary/20 backdrop-blur-sm"
-          style={{ clipPath: 'polygon(50% 4%, 96% 82%, 4% 82%)', borderRadius: '18%' }}
-        />
-        <div
-          className="absolute inset-[24%] border border-sky-300/50"
-          style={{ clipPath: 'polygon(50% 100%, 4% 20%, 96% 20%)', borderRadius: '18%' }}
-        />
+      <div className="relative aspect-square w-full max-w-sm animate-float">
+        <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle_at_40%_35%,oklch(0.55_0.16_235/0.55)_0%,transparent_70%)] blur-2xl" />
+        <svg
+          viewBox="0 0 200 200"
+          className="relative h-full w-full drop-shadow-[0_20px_50px_oklch(0.5_0.15_235/0.4)]"
+          role="img"
+          aria-label="Reuleaux triangle, a curve of constant width"
+        >
+          <defs>
+            <linearGradient id="reuleaux-fill" x1="30%" y1="10%" x2="80%" y2="95%">
+              <stop offset="0%" stopColor="oklch(0.72 0.15 230)" />
+              <stop offset="55%" stopColor="oklch(0.5 0.15 250)" />
+              <stop offset="100%" stopColor="oklch(0.3 0.1 262)" />
+            </linearGradient>
+            <radialGradient id="reuleaux-sheen" cx="38%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="oklch(0.95 0.05 230)" stopOpacity="0.7" />
+              <stop offset="45%" stopColor="oklch(0.85 0.09 230)" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <path d={path} fill="url(#reuleaux-fill)" />
+          <path d={path} fill="url(#reuleaux-sheen)" />
+          <path
+            d={path}
+            fill="none"
+            stroke="oklch(0.85 0.1 230)"
+            strokeWidth="1.5"
+            strokeOpacity="0.7"
+          />
+        </svg>
       </div>
     </div>
   )
