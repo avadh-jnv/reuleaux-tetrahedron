@@ -98,6 +98,11 @@ function useReuleauxGeometry() {
 
 function ReuleauxMesh() {
   const geometry = useReuleauxGeometry()
+  // Extract the sharp silhouette edges once for a crisp outline overlay.
+  const edges = useMemo(
+    () => new THREE.EdgesGeometry(geometry, 18),
+    [geometry],
+  )
   const group = useRef<THREE.Group>(null)
 
   useFrame((_, delta) => {
@@ -110,31 +115,27 @@ function ReuleauxMesh() {
   return (
     <Float speed={1.4} rotationIntensity={0.15} floatIntensity={0.6}>
       <group ref={group} scale={1.15}>
-        {/* Solid glassy body */}
+        {/* Solid, vibrant body (opaque so it stays readable on a transparent canvas) */}
         <mesh geometry={geometry} castShadow>
           <meshPhysicalMaterial
-            color="#3aa6ff"
-            metalness={0.35}
-            roughness={0.15}
+            color="#2f8ff0"
+            metalness={0.6}
+            roughness={0.25}
             clearcoat={1}
-            clearcoatRoughness={0.1}
-            transmission={0.35}
-            thickness={1.5}
-            ior={1.35}
-            reflectivity={0.6}
-            emissive="#0a2a55"
-            emissiveIntensity={0.25}
+            clearcoatRoughness={0.15}
+            reflectivity={0.7}
+            emissive="#0c2e5c"
+            emissiveIntensity={0.35}
           />
         </mesh>
-        {/* Glowing wireframe overlay */}
-        <mesh geometry={geometry} scale={1.001}>
-          <meshBasicMaterial
-            color="#8fd4ff"
-            wireframe
-            transparent
-            opacity={0.12}
-          />
+        {/* Soft glowing wireframe to reveal the curved facets */}
+        <mesh geometry={geometry} scale={1.002}>
+          <meshBasicMaterial color="#9bdcff" wireframe transparent opacity={0.08} />
         </mesh>
+        {/* Crisp edge outline emphasizing the tetrahedral structure */}
+        <lineSegments geometry={edges} scale={1.004}>
+          <lineBasicMaterial color="#bfe6ff" transparent opacity={0.5} />
+        </lineSegments>
       </group>
     </Float>
   )
