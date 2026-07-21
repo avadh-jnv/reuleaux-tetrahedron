@@ -27,7 +27,7 @@ function useReuleauxGeometry() {
     const a2 = 8
     const c = 3 - a2 // = -5
 
-    const geo = new THREE.IcosahedronGeometry(1, 48)
+    const geo = new THREE.IcosahedronGeometry(1, 24)
     const pos = geo.attributes.position as THREE.BufferAttribute
     const dir = new THREE.Vector3()
 
