@@ -2,8 +2,55 @@
 
 import { Canvas, useFrame } from '@react-three/fiber'
 import { OrbitControls, Environment, Float } from '@react-three/drei'
-import { useMemo, useRef, Suspense } from 'react'
+import { Component, useEffect, useMemo, useRef, useState, Suspense, type ReactNode } from 'react'
 import * as THREE from 'three'
+
+/** Detects whether the browser can actually create a WebGL context. */
+function isWebGLAvailable() {
+  if (typeof window === 'undefined') return false
+  try {
+    const canvas = document.createElement('canvas')
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    )
+  } catch {
+    return false
+  }
+}
+
+/** Catches any runtime WebGL errors thrown while rendering the Canvas. */
+class WebGLErrorBoundary extends Component<
+  { fallback: ReactNode; children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false }
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+  render() {
+    return this.state.hasError ? this.props.fallback : this.props.children
+  }
+}
+
+/** Elegant CSS-only stand-in shown when WebGL is unavailable. */
+function StaticFallback() {
+  return (
+    <div className="flex h-full w-full items-center justify-center p-8">
+      <div className="relative aspect-square w-full max-w-sm">
+        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_35%_30%,oklch(0.6_0.16_235)_0%,oklch(0.3_0.1_262)_55%,transparent_75%)] blur-md animate-float" />
+        <div
+          className="absolute inset-[12%] border border-primary/40 bg-gradient-to-br from-primary/30 to-navy-800/60 shadow-2xl shadow-primary/20 backdrop-blur-sm"
+          style={{ clipPath: 'polygon(50% 4%, 96% 82%, 4% 82%)', borderRadius: '18%' }}
+        />
+        <div
+          className="absolute inset-[24%] border border-sky-300/50"
+          style={{ clipPath: 'polygon(50% 100%, 4% 20%, 96% 20%)', borderRadius: '18%' }}
+        />
+      </div>
+    </div>
+  )
+}
 
 /**
  * Builds an accurate Reuleaux Tetrahedron geometry.
@@ -94,14 +141,24 @@ function ReuleauxMesh() {
 }
 
 export function ReuleauxScene() {
+  const [supported, setSupported] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    setSupported(isWebGLAvailable())
+  }, [])
+
+  // While detecting (or if unsupported), show the static fallback.
+  if (supported !== true) return <StaticFallback />
+
   return (
-    <Canvas
-      camera={{ position: [0, 0, 6], fov: 45 }}
-      dpr={[1, 2]}
-      gl={{ antialias: true, alpha: true }}
-      aria-label="Interactive 3D model of a Reuleaux Tetrahedron"
-    >
-      <Suspense fallback={null}>
+    <WebGLErrorBoundary fallback={<StaticFallback />}>
+      <Canvas
+        camera={{ position: [0, 0, 6], fov: 45 }}
+        dpr={[1, 2]}
+        gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
+        aria-label="Interactive 3D model of a Reuleaux Tetrahedron"
+      >
+        <Suspense fallback={null}>
         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 6, 4]} intensity={2.2} color="#ffffff" />
         <directionalLight position={[-6, -3, -4]} intensity={1.2} color="#4d8bff" />
@@ -117,7 +174,8 @@ export function ReuleauxScene() {
           minPolarAngle={Math.PI / 6}
           maxPolarAngle={(Math.PI * 5) / 6}
         />
-      </Suspense>
-    </Canvas>
+        </Suspense>
+      </Canvas>
+    </WebGLErrorBoundary>
   )
 }
